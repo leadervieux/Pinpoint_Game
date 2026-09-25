@@ -93,10 +93,7 @@ def nombre_seguro(synset, idioma):
     Si NO existe traducción en ese idioma para este synset, retorna None
     (en vez de plantar con IndexError).
     """
-    if idioma == "eng":
-        lemas = synset.lemmas()
-    else:
-        lemas = synset.lemmas(lang=idioma)
+    lemas = synset.lemmas(lang=idioma)
 
     if not lemas:
         return None
@@ -169,10 +166,8 @@ def obtener_indicios(palabra, idioma_i):
             origen.append("hipónimo")
 
     # --- Sinónimo (excluyendo la palabra misma) ---
-    if idioma_i == "eng":
-        lemas = synset.lemmas()
-    else:
-        lemas = synset.lemmas(lang=idioma_i)
+    lemas = synset.lemmas(lang=idioma_i)
+    
     sinonimos_bruts = [l.name().replace("_", " ").split("|")[0] for l in lemas]
     sinonimos = [s for s in sinonimos_bruts if s.lower() != palabra.replace("_", " ").lower()]
     rd.shuffle(sinonimos)
@@ -194,12 +189,6 @@ def obtener_indicios(palabra, idioma_i):
                     break
             if len(indicios) >= 5:
                 break
-
-    # --- Ultimo recurso : la definición (en inglés, WordNet no traduce definiciones) ---
-    uso_definicion_como_repli = False
-    if len(indicios) < 5:
-        indicios.append(synset.definition())
-        uso_definicion_como_repli = True
 
     return indicios[:5], origen[:5], uso_definicion_como_repli
 
