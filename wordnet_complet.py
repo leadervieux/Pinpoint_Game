@@ -190,7 +190,8 @@ def obtener_indicios(palabra, idioma_i):
             if len(indicios) >= 5:
                 break
 
-    return indicios[:5], origen[:5], uso_definicion_como_repli
+
+    return indicios[:5], origen[:5]
 
 
 # ------------------------------------------------------------
@@ -199,9 +200,9 @@ def obtener_indicios(palabra, idioma_i):
 def generar_partida(idioma_i, max_intentos=100):
     for _ in range(max_intentos):
         palabra = crear_palabras(idioma_i)
-        indicios, origen, uso_definicion = obtener_indicios(palabra, idioma_i)
+        indicios, origen = obtener_indicios(palabra, idioma_i)
 
-        if len(indicios) == 5 and not uso_definicion:
+        if len(indicios) == 5 :
             return palabra, indicios, origen
 
     # Si después de todos los intentos no hemos encontrado nada satisfactorio,
@@ -215,8 +216,7 @@ def generar_partida(idioma_i, max_intentos=100):
 palabra, indicios, origen = generar_partida(idioma_i)
 
 print(f"\n(respuesta oculta para depuración: {palabra})\n")
-for i, ind in enumerate(zip(indicios,origen), start=1):
+for i, (ind, org) in enumerate(zip(indicios, origen), start=1):
     print(f"Indicio {i} [{org}]: {ind}")
-
 
 
