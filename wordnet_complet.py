@@ -101,7 +101,7 @@ def nombre_seguro(synset, idioma):
     if not lemas:
         return None
     nombre = lemas[0].name().replace("_", " ")
-    nombre = nombre.split("|")[0]  # OMW sépare parfois des variantes avec "|"
+    nombre = nombre.split("|")[0]
     return nombre
 
 
@@ -140,7 +140,8 @@ def obtener_indicios(palabra, idioma_i):
     synset = synsets[0]
 
     indicios = []
-
+    origen = [] 
+ 
     hyperonymos = synset.hypernyms()
     hyponyms = synset.hyponyms()
 
@@ -155,6 +156,7 @@ def obtener_indicios(palabra, idioma_i):
         nombre = nombre_seguro(h, idioma_i)
         if nombre and nombre.lower() != palabra.replace("_", " ").lower() and nombre not in indicios:
             indicios.append(nombre)
+            origen.append("hiperónimo")
 
     # --- Hipónimos : tantos como haga falta, saltando los sin traducción ---
     rd.shuffle(hyponyms)
@@ -164,6 +166,7 @@ def obtener_indicios(palabra, idioma_i):
         nombre = nombre_seguro(h, idioma_i)
         if nombre and nombre.lower() != palabra.replace("_", " ").lower() and nombre not in indicios:
             indicios.append(nombre)
+            origen.append("hipónimo")
 
     # --- Sinónimo (excluyendo la palabra misma) ---
     if idioma_i == "eng":
@@ -178,6 +181,7 @@ def obtener_indicios(palabra, idioma_i):
             break
         if s not in indicios:
             indicios.append(s)
+            origen.append("sinónimo")
 
     # --- Reserva finale : hipónimos de hipónimos, si todavía falta ---
     if len(indicios) < 5:
@@ -197,7 +201,7 @@ def obtener_indicios(palabra, idioma_i):
         indicios.append(synset.definition())
         uso_definicion_como_repli = True
 
-    return indicios[:5], uso_definicion_como_repli
+    return indicios[:5], origen[:5], uso_definicion_como_repli
 
 
 # ------------------------------------------------------------
@@ -206,21 +210,24 @@ def obtener_indicios(palabra, idioma_i):
 def generar_partida(idioma_i, max_intentos=100):
     for _ in range(max_intentos):
         palabra = crear_palabras(idioma_i)
-        indicios, uso_definicion = obtener_indicios(palabra, idioma_i)
+        indicios, origen, uso_definicion = obtener_indicios(palabra, idioma_i)
 
         if len(indicios) == 5 and not uso_definicion:
-            return palabra, indicios
+            return palabra, indicios, origen
 
     # Si después de todos los intentos no hemos encontrado nada satisfactorio,
     # aceptamos el último resultado encontrado en lugar de fallar.
-    return palabra, indicios
+    return palabra, indicios, origen
 
 
 # ------------------------------------------------------------
 # Prueba de la función generar_partida
 # ------------------------------------------------------------
-palabra, indicios = generar_partida(idioma_i)
+palabra, indicios, origen = generar_partida(idioma_i)
 
 print(f"\n(respuesta oculta para depuración: {palabra})\n")
-for i, ind in enumerate(indicios, start=1):
-    print(f"Indicio {i}: {ind}")
+for i, ind in enumerate(zip(indicios,origen), start=1):
+    print(f"Indicio {i} [{org}]: {ind}")
+
+
+
