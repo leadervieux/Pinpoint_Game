@@ -1,5 +1,5 @@
 """
-juego.py — Lógica del juego y bucle de consola
+juego.py : Lógica del juego y bucle de consola
 Ejecutar con: python3 juego.py
 """
 from wordnet_pistas import generar_partida
