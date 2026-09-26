@@ -60,9 +60,9 @@ Para validar la respuesta del jugador no basta con comparar las cadenas de texto
 
 El proceso se hace en dos pasos:
 
-1. **`normalize()`** — limpieza de la cadena: pasa el texto a minúsculas y elimina los acentos/diacríticos usando `unicodedata` (normalización NFD, luego se descartan los caracteres de la categoría `Mn`, es decir las marcas diacríticas). Por ejemplo, `"Île"` se convierte en `"ile"`.
+1. **`normalize()`** : limpieza de la cadena: pasa el texto a minúsculas y elimina los acentos/diacríticos usando `unicodedata` (normalización NFD, luego se descartan los caracteres de la categoría `Mn`, es decir las marcas diacríticas). Por ejemplo, `"Île"` se convierte en `"ile"`.
 
-2. **`stemmer_word()`** — aplica un *stemming* (reducción a la raíz de la palabra) sobre el texto ya normalizado, usando `SnowballStemmer` de NLTK. Usamos **tres stemmers distintos**, uno por idioma soportado (`SnowballStemmer("french")`, `SnowballStemmer("spanish")`, `SnowballStemmer("english")`), y se elige el stemmer correspondiente según el idioma de la partida en curso.
+2. **`stemmer_word()`** : aplica un *stemming* (reducción a la raíz de la palabra) sobre el texto ya normalizado, usando `SnowballStemmer` de NLTK. Usamos **tres stemmers distintos**, uno por idioma soportado (`SnowballStemmer("french")`, `SnowballStemmer("spanish")`, `SnowballStemmer("english")`), y se elige el stemmer correspondiente según el idioma de la partida en curso.
 
 Finalmente, **`is_same_word()`** compara el stem de la propuesta del jugador con el stem de la respuesta esperada: si ambos stems coinciden, la respuesta se considera correcta — incluso si difiere en mayúsculas, acentos, singular/plural, o (parcialmente) género.
 
