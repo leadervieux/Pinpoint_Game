@@ -1,15 +1,15 @@
-from nltk.corpus import wordnet as wn
+"""
+wordnet_pistas.py : Selección de conceptos y generación de indicios semánticos
+"""
 import random as rd
-
 import nltk
+from nltk.corpus import wordnet as wn
+
+# Descargas silenciosas de los paquetes necesarios
 nltk.download('wordnet', quiet=True)
 nltk.download('omw-1.4', quiet=True)
-nltk.download('omw-2.0', quiet=True)
 
-
-# ============================================================
-# LISTA INGLES (100 PALABRAS)
-# ============================================================
+# Listas de vocabulario alineadas índice por índice
 MOTS_ANGLAIS = [
     "guitar", "violin", "piano", "drum", "trumpet", "flute", "harp", "saxophone",
     "lawyer", "teacher", "doctor", "surgeon", "farmer", "engineer", "pilot", "nurse",
@@ -28,9 +28,6 @@ MOTS_ANGLAIS = [
     "violinist", "carpenter", "blacksmith", "beekeeper",
 ]
 
-# ============================================================
-# LISTA ESPAÑOL (100 PALABRAS)
-# ============================================================
 MOTS_ESPAGNOL = [
     "guitarra", "violín", "piano", "tambor", "trompeta", "flauta", "arpa", "saxofón",
     "abogado", "profesor", "médico", "cirujano", "agricultor", "ingeniero", "piloto",
@@ -49,9 +46,6 @@ MOTS_ESPAGNOL = [
     "violinista", "carpintero", "herrero", "apicultor",
 ]
 
-# ============================================================
-# LISTA FRANCESA (100 PALABRAS)
-# ============================================================
 MOTS_FRANCAIS = [
     "guitare", "violon", "piano", "tambour", "trompette", "flûte", "harpe", "saxophone",
     "avocat", "professeur", "médecin", "chirurgien", "agriculteur", "ingénieur", "pilote",
@@ -67,85 +61,91 @@ MOTS_FRANCAIS = [
     "moto", "canoë", "tracteur", "ambulance",
     "cascade", "volcan", "montagne", "désert", "forêt", "glacier", "île",
     "rivière", "grotte", "falaise", "vallée", "plage", "lac",
-    "violoniste", "charpentier", "forgeron", "apiculteur",
+    "violiniste", "charpentier", "forgeron", "apiculteur",
 ]
 
 
-## Obtener la idioma de las instrucciones y de la pregunta
-
-idioma_i = input("Ingrese el idioma de las instrucciones (spa, fra, eng): ")
-while idioma_i != "spa" and idioma_i != "fra" and idioma_i != "eng":
-    print("Idioma no válido. Por favor, ingrese 'spa', 'fra' o 'eng'.")
-    idioma_i = input("Ingrese el idioma de las instrucciones (spa, fra, eng): ")
-
-idioma_preg = input("Ingrese el idioma de la pregunta (spa, fra, eng): ")
-while idioma_preg != "spa" and idioma_preg != "fra" and idioma_preg != "eng":
-    print("Idioma no válido. Por favor, ingrese 'spa', 'fra' o 'eng'.")
-    idioma_preg = input("Ingrese el idioma de la pregunta (spa, fra, eng): ")
-
-
-# ------------------------------------------------------------
-# Para verificar si un synset tiene traducción en el idioma dado, y obtener el nombre del primer lema en ese idioma.
-# ------------------------------------------------------------
 def nombre_seguro(synset, idioma):
     """
-    Retorna el nombre del primer lema de 'synset' en el idioma dado.
-    Si NO existe traducción en ese idioma para este synset, retorna None
-    (en vez de plantar con IndexError).
+    Retorna el lema traducido si existe en el idioma dado, o None si no hay traducción.
     """
-    lemas = synset.lemmas(lang=idioma)
+    if idioma == "eng":
+        lemas = synset.lemmas()
+    else:
+        lemas = synset.lemmas(lang=idioma)
 
     if not lemas:
         return None
     nombre = lemas[0].name().replace("_", " ")
-    nombre = nombre.split("|")[0]
-    return nombre
+    return nombre.split("|")[0]
 
 
-# ------------------------------------------------------------
-# Elección de palabra
-# ------------------------------------------------------------
+def _banco(idioma):
+    if idioma == "spa":
+        return MOTS_ESPAGNOL
+    elif idioma == "fra":
+        return MOTS_FRANCAIS
+    return MOTS_ANGLAIS
+
+
+# [MODIFICATION] : Nueva función para desambiguar el sentido correcto.
+# WordNet solo ordena los synsets por frecuencia en inglés. Para evitar sentidos
+# erróneos en español o francés (ej. 'forêt' interpretado como broca en lugar de bosque),
+# se usa el synset del inglés como referencia canónica y se hace intersección con el idioma destino.
+def obtener_synset_por_indice(indice, idioma):
+    palabra_en = MOTS_ANGLAIS[indice]
+    synsets_en = wn.synsets(palabra_en, pos=wn.NOUN)
+    if not synsets_en:
+        return None
+
+    if idioma == "eng":
+        return synsets_en[0]
+
+    palabra_cible = _banco(idioma)[indice]
+    synsets_cible = set(wn.synsets(palabra_cible, lang=idioma, pos=wn.NOUN))
+    if not synsets_cible:
+        return None
+
+    for s in synsets_en:
+        if s in synsets_cible:
+            return s
+
+    return next(iter(synsets_cible))
+
+
+# [MODIFICATION] : Retorna un índice numérico en lugar de un string arbitrario
+# para garantizar que la misma palabra y su traducción compartan exactamente el mismo concepto.
 def crear_palabras(idioma_i, max_intentos=500):
-    if idioma_i == "spa":
-        banco_palabras = MOTS_ESPAGNOL
-    elif idioma_i == "fra":
-        banco_palabras = MOTS_FRANCAIS
-    elif idioma_i == "eng":
-        banco_palabras = MOTS_ANGLAIS
-
+    n = len(MOTS_ANGLAIS)
     for _ in range(max_intentos):
-        palabra = rd.choice(banco_palabras)
-        synsets = wn.synsets(palabra, lang=idioma_i, pos=wn.NOUN)
-
-        if not synsets:
+        indice = rd.randrange(n)
+        s = obtener_synset_por_indice(indice, idioma_i)
+        if s is None:
             continue
-
-        s = synsets[0]
         if (len(s.hypernyms()) > 0
                 and len(s.hyponyms()) > 1
                 and nombre_seguro(s, idioma_i) is not None):
-            return palabra
+            return indice
 
-    raise RuntimeError("No se encontró ninguna palabra válida en el banco. Revisa la lista.")
+    raise RuntimeError("No se encontró ninguna palabra válida en el banco.")
 
 
-# ------------------------------------------------------------
-# Generación de indicios
-# ------------------------------------------------------------
-def obtener_indicios(palabra, idioma_i):
-    synsets = wn.synsets(palabra, lang=idioma_i, pos=wn.NOUN)
-    synset = synsets[0]
+# [MODIFICATION] : Recibe el 'indice' validado y genera las pistas junto con
+# el arreglo 'origen' que especifica la relación léxica (hiperónimo, hipónimo, sinónimo).
+def obtener_indicios(indice, idioma_i):
+    synset = obtener_synset_por_indice(indice, idioma_i)
+    palabra = _banco(idioma_i)[indice]
 
     indicios = []
-    origen = [] 
- 
+    origen = []
+
     hyperonymos = synset.hypernyms()
     hyponyms = synset.hyponyms()
 
-    # --- Hiperónimos : intentamos 2, con reserva a nivel 3 si falta ---
+    # 1. Hiperónimos
     candidatos_hiper = list(hyperonymos)
     if hyperonymos:
-        candidatos_hiper += hyperonymos[0].hypernyms()  # abuelo, como reserva
+        candidatos_hiper += hyperonymos[0].hypernyms()
 
     for h in candidatos_hiper:
         if len(indicios) >= 2:
@@ -155,21 +155,24 @@ def obtener_indicios(palabra, idioma_i):
             indicios.append(nombre)
             origen.append("hiperónimo")
 
-    # --- Hipónimos : tantos como haga falta, saltando los sin traducción ---
+    # 2. Hipónimos
     rd.shuffle(hyponyms)
     for h in hyponyms:
-        if len(indicios) >= 4:  # dejamos sitio para 1 sinónimo al final
+        if len(indicios) >= 4:
             break
         nombre = nombre_seguro(h, idioma_i)
         if nombre and nombre.lower() != palabra.replace("_", " ").lower() and nombre not in indicios:
             indicios.append(nombre)
             origen.append("hipónimo")
 
-    # --- Sinónimo (excluyendo la palabra misma) ---
-    lemas = synset.lemmas(lang=idioma_i)
-    
-    sinonimos_bruts = [l.name().replace("_", " ").split("|")[0] for l in lemas]
-    sinonimos = [s for s in sinonimos_bruts if s.lower() != palabra.replace("_", " ").lower()]
+    # 3. Sinónimos
+    if idioma_i == "eng":
+        lemas = synset.lemmas()
+    else:
+        lemas = synset.lemmas(lang=idioma_i)
+
+    sinonimos = [l.name().replace("_", " ").split("|")[0] for l in lemas]
+    sinonimos = [s for s in sinonimos if s.lower() != palabra.replace("_", " ").lower()]
     rd.shuffle(sinonimos)
     for s in sinonimos:
         if len(indicios) >= 5:
@@ -178,45 +181,34 @@ def obtener_indicios(palabra, idioma_i):
             indicios.append(s)
             origen.append("sinónimo")
 
-    # --- Reserva finale : hipónimos de hipónimos, si todavía falta ---
+    # 4. Hipónimos de hipónimos en caso de faltar pistas
     if len(indicios) < 5:
         for h in hyponyms:
             for nieto in h.hyponyms():
                 nombre = nombre_seguro(nieto, idioma_i)
                 if nombre and nombre.lower() != palabra.replace("_", " ").lower() and nombre not in indicios:
                     indicios.append(nombre)
+                    origen.append("hipónimo")
                 if len(indicios) >= 5:
                     break
             if len(indicios) >= 5:
                 break
 
-
     return indicios[:5], origen[:5]
 
 
-# ------------------------------------------------------------
-# Para generar una partida, intentamos hasta 100 veces encontrar una palabra con 5 indicios sin usar la definición. Si no lo logramos, aceptamos la última palabra encontrada aunque usemos la definición.
-# ------------------------------------------------------------
-def generar_partida(idioma_i, max_intentos=100):
+# [MODIFICATION] : Recibe DOS idiomas (idioma de pistas e idioma de respuesta).
+# Antes, 'idioma_preg' se leía pero nunca se usaba. Al estar las 3 listas alineadas,
+# la palabra esperada se toma directamente con _banco(idioma_preg)[indice].
+def generar_partida(idioma_i, idioma_preg, max_intentos=100):
     for _ in range(max_intentos):
-        palabra = crear_palabras(idioma_i)
-        indicios, origen = obtener_indicios(palabra, idioma_i)
+        indice = crear_palabras(idioma_i)
+        indicios, origen = obtener_indicios(indice, idioma_i)
+        if len(indicios) == 5:
+            palabra_pista = _banco(idioma_i)[indice]
+            palabra_respuesta = _banco(idioma_preg)[indice]
+            return palabra_pista, indicios, origen, palabra_respuesta
 
-        if len(indicios) == 5 :
-            return palabra, indicios, origen
-
-    # Si después de todos los intentos no hemos encontrado nada satisfactorio,
-    # aceptamos el último resultado encontrado en lugar de fallar.
-    return palabra, indicios, origen
-
-
-# ------------------------------------------------------------
-# Prueba de la función generar_partida
-# ------------------------------------------------------------
-palabra, indicios, origen = generar_partida(idioma_i)
-
-print(f"\n(respuesta oculta para depuración: {palabra})\n")
-for i, (ind, org) in enumerate(zip(indicios, origen), start=1):
-    print(f"Indicio {i} [{org}]: {ind}")
-
-
+    palabra_pista = _banco(idioma_i)[indice]
+    palabra_respuesta = _banco(idioma_preg)[indice]
+    return palabra_pista, indicios, origen, palabra_respuesta
