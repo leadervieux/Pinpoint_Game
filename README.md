@@ -44,3 +44,30 @@ Finalmente, **`is_same_word()`** compara el stem de la propuesta del jugador con
 Ejemplo: si la respuesta esperada es `"chien"`, las propuestas `"Chien"`, `"CHIENS"` o `"chiens "` son todas aceptadas, porque una vez normalizadas y reducidas a su raíz (`stem`) dan el mismo resultado (`"chien"`).
 
 > Nota: se trata de *stemming* (reducción heurística a una raíz aproximada) y no de lematización propiamente dicha (que requeriría un análisis morfológico completo para volver a la forma canónica exacta de la palabra). Elegimos Snowball porque NLTK ofrece una implementación lista para usar en los 3 idiomas del proyecto, lo cual cumple el requisito 4.2 del enunciado ("Lematización y/o stemming").
+
+## Lógica de la partida y interfaces de juego
+
+### Clase `Game`
+
+La clase `Game` contiene toda la lógica del juego: las rondas, las pistas, el puntaje y la comprobación de las respuestas. No usa `print`, `input` ni widgets, así que es independiente de la interfaz y la comparten la versión gráfica y la de consola.
+
+- **`__init__`**: recibe el número de rondas, el idioma de las pistas, el idioma de la respuesta y la función `generar_partida`. Prepara todas las rondas de antemano y descarta las incompletas.
+- **`answer(text)`**: comprueba la respuesta y devuelve un código (`"Empty"`, `"words_found"`, `"wrong"` o `"out_of_clues"`). La interfaz decide qué mostrar según ese código.
+- **`next_round()`**: pasa a la siguiente ronda. Devuelve `False` cuando la partida termina.
+
+### Puntuación
+
+Hay 5 pistas por ronda. Al acertar se suman `6 - clues` puntos, donde `clues` es el número de pistas falladas antes de acertar:
+
+| Acierto con la pista | 1.ª | 2.ª | 3.ª | 4.ª | 5.ª | Sin acertar |
+|---|---|---|---|---|---|---|
+| Puntos | 6 | 5 | 4 | 3 | 2 | 0 |
+
+### Interfaces
+
+- **Gráfica (`ipywidgets`)**: se eligen los idiomas y el número de rondas con menús y un control deslizante. La respuesta se envía con *Validar* o con Enter, y *Abandonar* cancela la partida. Cada botón tiene una función asociada (*callback*) y `game_state` guarda la partida en curso.
+- **Consola (`play_console()`)**: usa `input()` y `print()` dentro de un bucle. Se escribe `exit` para salir.
+
+### Dependencias
+
+`Game` usa `normalize()` e `is_same_word()` (celda 2) y recibe `generar_partida` (celda 3) como argumento. Hay que ejecutar esas celdas antes.
