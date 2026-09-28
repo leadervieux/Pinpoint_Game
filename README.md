@@ -19,10 +19,14 @@ Decidimos usar GitHub para exponer nuestras ideas. A continuación, la explicaci
 
 
 ### Wornet
-La primera función clave, nombre_seguro(), consiste en verificar que un concepto (synset) posea una traducción válida en el idioma seleccionado, evitando errores críticos como el IndexError si WordNet no encuentra lemas para ese idioma.
+La primera función clave, nombre_seguro(), consiste en verificar que un concepto (synset) posea una traducción válida en el idioma seleccionado, evitando errores críticos como el IndexError si WordNet no encuentra lemas para ese idioma.`
+
 A continuación, incorporamos una función fundamental para desambiguar el sentido correcto: obtener_synset_por_indice(). Como WordNet solo ordena los synsets por frecuencia en inglés, esta función utiliza el término en inglés como referencia canónica y realiza una intersección con los synsets del idioma de destino. Esto evita errores graves de traducción o polisemia (por ejemplo, evitar que la palabra francesa "forêt" se interprete por error como una broca en lugar de un bosque).
+
 La tercera función, crear_palabras(), selecciona un índice aleatorio y comprueba mediante la función anterior que el concepto cumpla con condiciones estrictas: tener al menos un hiperónimo, dos hipónimos y una traducción válida, garantizando así la calidad del juego. Establecimos un límite de quinientos intentos para evitar bucles infinitos o bloqueos.
+
 La cuarta función, obtener_indicios(), se encarga de generar exactamente cinco pistas estructuradas por jerarquía semántica: primero recuperamos hasta dos hiperónimos (conceptos más amplios), después completamos hasta cuatro con hipónimos (conceptos más específicos), y finalmente añadimos sinónimos o hipónimos de segundo nivel si faltan pistas. Todo esto filtrando siempre para que no aparezca la palabra buscada.
+
 Por último, la función generar_partida() coordina todo el flujo. Selecciona el concepto validado y extrae de forma paralela la palabra pista en el idioma de las instrucciones y la palabra respuesta en el idioma elegido por el usuario, asegurando que siempre se disponga de las cinco pistas necesarias antes de iniciar el juego.
 
 ### Lematización
