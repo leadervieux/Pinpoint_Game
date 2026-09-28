@@ -4,40 +4,7 @@ Trabajamos dividiendo el proyecto en 3 partes: la parte de WordNet y generación
 
 ## Instrucciones de ejecución
 
-### Requisitos previos
-- Python 3.9 o superior
-
-### 1. Clonar el repositorio
-```bash
-git clone <https://github.com/leadervieux/Pinpoint_Game.git>
-cd Pinpoint_Game
-```
-
-### 2. Crear y activar un entorno virtual
-
-**macOS / Linux :**
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-**Windows :**
-```bash
-python -m venv venv
-venv\Scripts\activate
-```
-
-### 3. Instalar las dependencias
-```bash
-pip install nltk
-```
-
-### 4. Ejecutar el juego
-```bash
-python3 trabajo_final.py
-```
-
-> Nota: en la primera ejecución, el script descarga automáticamente los recursos de WordNet y Open Multilingual WordNet necesarios (`wordnet`, `omw-1.4`, `omw-2.0`). Esto solo toma unos segundos y no se repite en las ejecuciones siguientes.
+Descarga el archivo <Pinpoint_Game.ipynb> y ábrelo en Google Colab. Ejecuta las consultas.
 
 ### 5. Jugar
 El juego te pedirá:
@@ -48,7 +15,7 @@ Las 5 pistas se mostrarán a continuación, de la más general a la más especí
 
 ## Código
 
-Decidimos usar GitHub / Google Colab para exponer nuestras ideas. A continuación, la explicación del código. 
+Decidimos usar GitHub para exponer nuestras ideas. A continuación, la explicación del código. 
 
 
 ### Wornet
